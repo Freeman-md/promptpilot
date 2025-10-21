@@ -16,9 +16,13 @@ type SidebarProps = {
 };
 
 const aiModes: AIMode[] = [
-  { title: "Friendly", subtitle: "Warm and conversational", icon: <IconHeartFilled /> },
-  { title: "Technical", subtitle: "Precise and detailed", icon: <IconCode /> },
-  { title: "Creative", subtitle: "Imaginative and inspiring", icon: <IconPaint /> },
+  {
+    title: "Friendly",
+    subtitle: "Warm and conversational",
+    icon: IconHeartFilled,
+  },
+  { title: "Technical", subtitle: "Precise and detailed", icon: IconCode },
+  { title: "Creative", subtitle: "Imaginative and inspiring", icon: IconPaint },
 ];
 
 const chats: Chat[] = [
@@ -62,15 +66,22 @@ export default function Sidebar({
       <nav className="space-y-2 mt-4">
         <h3 className="font-(family-name:--font-robot-text)">AI Modes</h3>
         <ul className="space-y-3 text-sm">
-          {aiModes.map((aiMode, index) => (
-            <li key={index} className="space-y-1 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-              <div className="flex space-x-2 items-center text-gray-800">
-                {aiMode.icon}
-                <b>{aiMode.title}</b>
-              </div>
-              <p className="text-gray-500">{aiMode.subtitle}</p>
-            </li>
-          ))}
+          {aiModes.map((aiMode, index) => {
+            const Icon = aiMode.icon;
+
+            return (
+              <li
+                key={index}
+                className="space-y-1 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="flex space-x-2 items-center text-gray-800">
+                  {Icon && <Icon size="20" stroke={1.8} />}
+                  <b>{aiMode.title}</b>
+                </div>
+                <p className="text-gray-500">{aiMode.subtitle}</p>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
@@ -81,7 +92,10 @@ export default function Sidebar({
 
         <div className="max-h-60 overflow-y-auto pr-2 space-y-2">
           {chats.map((chat, index) => (
-            <a key={index} className="flex flex-col space-y-1 p-2 rounded hover:bg-gray-50 cursor-pointer">
+            <a
+              key={index}
+              className="flex flex-col space-y-1 p-2 rounded hover:bg-gray-50 cursor-pointer"
+            >
               <em className="text-sm text-gray-800">{chat.title}</em>
               <small className="text-gray-500">{chat.relativeTime}</small>
             </a>
