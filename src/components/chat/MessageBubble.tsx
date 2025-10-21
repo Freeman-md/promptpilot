@@ -1,4 +1,4 @@
-import { IconRobotFace, IconUser } from "@tabler/icons-react";
+import { IconRobotFace, IconUser, IconUserCircle } from "@tabler/icons-react";
 
 type MessageBubbleProps = {
   sender: "ai" | "user";
@@ -19,7 +19,7 @@ export default function MessageBubble({ sender, text }: MessageBubbleProps) {
           isUser ? "bg-primary text-white" : "bg-gray-200 text-gray-700"
         }`}
       >
-        {isUser ? <span><IconUser /></span> : <IconRobotFace size={18} />}
+        {isUser ? <span><IconUserCircle /></span> : <IconRobotFace size={18} />}
       </div>
 
       <div

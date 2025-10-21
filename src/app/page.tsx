@@ -41,7 +41,7 @@ export default function Home() {
           />
           <button
             type="submit"
-            className="p-2 rounded-lg bg-primaring-primary text-white hover:opacity-90 transition"
+            className="p-2 rounded-lg bg-primary ring-primary text-white hover:opacity-90 transition"
           >
             <IconSend size={18} />
           </button>

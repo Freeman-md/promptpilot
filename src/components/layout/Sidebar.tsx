@@ -40,15 +40,16 @@ export default function Sidebar({
 }: SidebarProps) {
   return (
     <aside
-      className={clsx(
-        "flex flex-col h-screen border-r border-gray-200 transition-transform duration-300 bg-white p-8 space-y-8 overflow-hidden",
-        width,
-        !isOpen && "-translate-x-full md:translate-x-0",
-        className
-      )}
-    >
+  className={clsx(
+    "flex flex-col h-screen border-r border-gray-200 transition-transform duration-300 bg-white p-8 space-y-8 overflow-hidden shadow-md md:shadow-none",
+    width,
+    !isOpen && "-translate-x-full md:translate-x-0",
+    className
+  )}
+>
+
       <div className="flex space-x-2 items-center">
-        <div className="w-10 h-10 text-white grid place-items-center rounded-lg bg-[var(--color-primary)]">
+        <div className="w-10 h-10 text-white grid place-items-center rounded-lg bg-primary">
           <IconRobotFace />
         </div>
         <h1 className="text-lg font-semibold font-(family-name:--font-robot-text)">
