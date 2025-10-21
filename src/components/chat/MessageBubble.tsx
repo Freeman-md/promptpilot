@@ -14,7 +14,6 @@ export default function MessageBubble({ sender, text }: MessageBubbleProps) {
         isUser ? "ml-auto flex-row-reverse" : ""
       }`}
     >
-      {/* Avatar */}
       <div
         className={`grid h-8 w-8 place-items-center rounded-full shrink-0 ${
           isUser ? "bg-primary text-white" : "bg-gray-200 text-gray-700"
@@ -23,7 +22,6 @@ export default function MessageBubble({ sender, text }: MessageBubbleProps) {
         {isUser ? <span><IconUser /></span> : <IconRobotFace size={18} />}
       </div>
 
-      {/* Message box */}
       <div
         className={`rounded-xl border px-3 py-2 text-sm ${
           isUser
