@@ -3,7 +3,6 @@ import { Geist, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
-import MainEmpty from "@/components/layout/MainEmpty";
 import Footer from "@/components/layout/Footer";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -23,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="flex-1 min-h-screen flex flex-col bg-white">
           <Header mode="Friendly Mode" />
           <main className="relative flex-1 min-h-0">
-            <MainEmpty />
+            { children }
           </main>
           <Footer />
         </div>
