@@ -8,11 +8,11 @@ import {
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import Button from "@/components/ui/Button";
+import { useLayoutStore } from "@/store/layoutStore";
 
 type SidebarProps = {
   width?: string;
   className?: string;
-  isOpen?: boolean;
 };
 
 const aiModes: AIMode[] = [
@@ -36,8 +36,9 @@ const chats: Chat[] = [
 export default function Sidebar({
   width = "w-64",
   className,
-  isOpen,
 }: SidebarProps) {
+  const { sidebarOpen: isOpen } = useLayoutStore();
+
   return (
     <aside
   className={clsx(

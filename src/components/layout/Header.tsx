@@ -1,11 +1,15 @@
+import { useLayoutStore } from "@/store/layoutStore";
 import { IconDotsVertical, IconMenu2 } from "@tabler/icons-react";
 
 export default function Header({ mode = "Friendly Mode" }: { mode?: string }) {
+    const { toggleSidebar } = useLayoutStore();
+
   return (
     <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3 bg-white sticky top-0 z-20">
       <div className="flex items-center gap-3">
         <button
           aria-label="Open sidebar"
+          onClick={toggleSidebar}
           className="p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 md:hidden"
         >
           <IconMenu2 size={20} />
