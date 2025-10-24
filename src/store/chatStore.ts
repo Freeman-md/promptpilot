@@ -13,6 +13,8 @@ type ChatState = {
   startStreaming: () => void;
   updateStreamMessage: (contentChunk: string) => void;
   endStreaming: () => void;
+
+  sendMessage: (text: string) => void;
 };
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -81,4 +83,43 @@ export const useChatStore = create<ChatState>((set, get) => ({
         message.role === "assistant" ? { ...message, isStreaming: false } : message
       ),
     })),
+
+  sendMessage: async (text: string) => {
+    const { addUserMessage, startStreaming, updateStreamMessage, endStreaming, mode, messages, currentChatId } = get();
+
+    addUserMessage(text);
+    startStreaming();
+
+    const message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: text,
+      chatId: currentChatId,
+      createdAt: Date.now(),
+      isStreaming: false,
+    };
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, mode, history: messages }),
+    });
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      endStreaming();
+      return;
+    }
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      updateStreamMessage(decoder.decode(value));
+    }
+
+    endStreaming();
+  }
+
 }));
