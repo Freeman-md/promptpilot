@@ -1,10 +1,19 @@
 export type AIMode = {
-  title: string;
-  subtitle: string;
+  title: "Friendly" | "Techical" | "Creative";
+  subtitle?: string;
   icon?: React.ElementType;
 };
 
 export type Chat = {
     title: string;
     relativeTime: string;
+}
+
+export type Message = {
+  id: string;
+  role: "user" | "assistant" | "system"
+  content: string;
+  createdAt: number;
+  isStreaming: boolean;
+  chatId: string;
 }
