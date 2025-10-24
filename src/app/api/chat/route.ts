@@ -1,4 +1,6 @@
 import { AIMode, Message } from "@/types";
+import { openai } from "@/lib/openai";
+import { ResponseInput } from "openai/resources/responses/responses.mjs";
 
 export async function POST(request: Request) {
     try {
@@ -27,23 +29,61 @@ export async function POST(request: Request) {
 
         const messages = [
             {
-                role: "system",
-                content: systemPrompt,
+                role: "developer",
+                content: [
+                    {
+                        "type": "input_text",
+                        "text": systemPrompt
+                    }
+                ],
             },
             ...recentHistory.map((message: Message) => ({
                 role: message.role,
-                content: message.content
+                content: [
+                    {
+                        "type": "input_text",
+                        "text": message.content
+                    }
+                ],
             })),
             {
                 role: "user",
-                content: message,
+                content: [
+                    {
+                        "type": "input_text",
+                        "text": message.content
+                    }
+                ],
             }
-        ]
+        ] as ResponseInput
 
         console.log("🧠 Prepared messages:", messages.length);
 
-        return new Response(JSON.stringify({ ok: true, messages }), {
-            headers: { "Content-Type": "application/json" },
+        const response = await openai.responses.create({
+            model: 'gpt-5-mini',
+            input: messages,
+            stream: true,
+        })
+
+        const stream = new ReadableStream({
+            async start(controller) {
+                const encoder = new TextEncoder()
+
+                for await (const event of response) {
+                    if (event.type === 'response.output_text.delta') {
+                        controller.enqueue(encoder.encode(event.delta))
+                    } else if (event.type === 'response.completed') {
+                        controller.close()
+                    }
+                }
+            }
+        })
+
+        return new Response(stream, {
+            headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "no-cache",
+            },
         });
     } catch (err) {
         console.error("Error parsing body:", err);
