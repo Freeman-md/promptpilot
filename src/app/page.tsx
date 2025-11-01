@@ -29,7 +29,7 @@ export default function Home() {
           </div>
         )}
 
-        <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-4">
+        <div className="absolute bottom-2 left-6 right-6 flex flex-col gap-4 overflow-y-scroll h-full pt-10">
           {messages.map((message) => (
             <MessageBubble
               key={message.id}

@@ -25,6 +25,7 @@ type ChatState = {
   /** Chat control */
   resetChatSession: () => void;
   addUserMessage: (text: string) => Message;
+  removeMessage: (id: string) => void;
 
   /** AI response streaming */
   beginAIResponseStream: () => void;
@@ -79,6 +80,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return userMessage;
   },
 
+  removeMessage: (id: string) =>
+    set((state) => ({
+      messages: state.messages.filter((message) => message.id !== id),
+    })),
+
   /** ─── AI Stream Handlers ───────────────────────────── */
   beginAIResponseStream: () => set({ isAwaitingAIResponse: true }),
 
@@ -116,6 +122,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sendMessage: async (text) => {
     const {
       addUserMessage,
+      removeMessage,
       beginAIResponseStream,
       appendAIResponseChunk,
       finalizeAIResponseStream,
@@ -140,6 +147,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }),
       });
 
+      if (!res.ok) throw new Error(await res.text());
+
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       if (!reader) throw new Error("Stream reader not available.");
@@ -149,8 +158,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (done) break;
         appendAIResponseChunk(decoder.decode(value));
       }
-    } catch (err) {
-      console.error("Error streaming AI response:", err);
+
+    } catch (err: unknown) {
+      removeMessage(userMessage.id);
+
+
+      if (err instanceof Error)
+        throw new Error(err.message || "Failed to send message.");
     } finally {
       finalizeAIResponseStream();
     }

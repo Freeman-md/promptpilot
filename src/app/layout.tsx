@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import LayoutClient from "@/components/layout/LayoutClient";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const spaceGrotesk = Space_Grotesk({
@@ -25,6 +26,7 @@ export default function RootLayout({
         className={`${geistSans.className} ${spaceGrotesk.variable} antialiased flex`}
       >
         <LayoutClient>{children}</LayoutClient>
+        <Toaster />
       </body>
     </html>
   );
