@@ -1,5 +1,5 @@
 export type AIMode = {
-  title: "Friendly" | "Techical" | "Creative";
+  title: "Friendly" | "Technical" | "Creative";
   subtitle?: string;
   icon?: React.ElementType;
 };

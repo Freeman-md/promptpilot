@@ -1,4 +1,4 @@
-import { AIMode, Chat } from "@/types";
+import { Chat } from "@/types";
 import {
   IconRobotFace,
   IconPlus,
@@ -9,46 +9,45 @@ import {
 import clsx from "clsx";
 import Button from "@/components/ui/Button";
 import { useLayoutStore } from "@/store/layoutStore";
+import { useChatStore } from "@/store/chatStore";
 
 type SidebarProps = {
   width?: string;
   className?: string;
 };
 
-const aiModes: AIMode[] = [
-  {
-    title: "Friendly",
-    subtitle: "Warm and conversational",
-    icon: IconHeartFilled,
-  },
-  { title: "Technical", subtitle: "Precise and detailed", icon: IconCode },
-  { title: "Creative", subtitle: "Imaginative and inspiring", icon: IconPaint },
-];
+/** Local icon map — decoupled from the store */
+const modeIcons: Record<string, React.ElementType> = {
+  Friendly: IconHeartFilled,
+  Technical: IconCode,
+  Creative: IconPaint,
+};
 
+/** Mock chat list (temporary) */
 const chats: Chat[] = [
-  { title: "How to build a react app?", relativeTime: "2 hours ago" },
+  { title: "How to build a React app?", relativeTime: "2 hours ago" },
   { title: "Creative writing prompts", relativeTime: "Yesterday" },
   { title: "API documentation best practices", relativeTime: "3 days ago" },
   { title: "Marketing strategy ideas", relativeTime: "1 week ago" },
   { title: "UI design principles", relativeTime: "2 weeks ago" },
 ];
 
-export default function Sidebar({
-  width = "w-64",
-  className,
-}: SidebarProps) {
+export default function Sidebar({ width = "w-64", className }: SidebarProps) {
   const { sidebarOpen: isOpen } = useLayoutStore();
+
+  // Zustand chat store hooks
+  const { aiModes, activeAIMode, setActiveAIMode } = useChatStore();
 
   return (
     <aside
-  className={clsx(
-    "flex flex-col h-screen border-r border-gray-200 transition-transform duration-300 bg-white p-8 space-y-8 overflow-hidden shadow-md md:shadow-none",
-    width,
-    !isOpen && "-translate-x-full md:translate-x-0",
-    className
-  )}
->
-
+      className={clsx(
+        "flex flex-col h-screen border-r border-gray-200 transition-transform duration-300 bg-white p-8 space-y-8 overflow-hidden shadow-md md:shadow-none",
+        width,
+        !isOpen && "-translate-x-full md:translate-x-0",
+        className
+      )}
+    >
+      {/* ─── Header ─────────────────────────────── */}
       <div className="flex space-x-2 items-center">
         <div className="w-10 h-10 text-white grid place-items-center rounded-lg bg-primary">
           <IconRobotFace />
@@ -65,22 +64,44 @@ export default function Sidebar({
 
       <hr />
 
+      {/* ─── AI Modes ───────────────────────────── */}
       <nav className="space-y-2 mt-4">
         <h3 className="font-(family-name:--font-robot-text)">AI Modes</h3>
-        <ul className="space-y-3 text-sm">
-          {aiModes.map((aiMode, index) => {
-            const Icon = aiMode.icon;
+
+        <ul className="space-y-2 text-sm">
+          {aiModes.map((mode) => {
+            const Icon = modeIcons[mode.title] || IconHeartFilled;
+            const isActive = activeAIMode.title === mode.title;
 
             return (
               <li
-                key={index}
-                className="space-y-1 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                key={mode.title}
+                onClick={() => setActiveAIMode(mode.title)}
+                className={clsx(
+                  "p-3 rounded-lg cursor-pointer transition-colors duration-150",
+                  isActive
+                    ? "bg-primary text-white shadow-sm"
+                    : "hover:bg-gray-50 text-gray-800"
+                )}
               >
-                <div className="flex space-x-2 items-center text-gray-800">
-                  {Icon && <Icon size="20" stroke={1.8} />}
-                  <b>{aiMode.title}</b>
+                <div className="flex items-center space-x-2">
+                  <Icon
+                    size={20}
+                    stroke={1.8}
+                    className={clsx(isActive ? "text-white" : "text-gray-700")}
+                  />
+                  <b>{mode.title}</b>
                 </div>
-                <p className="text-gray-500">{aiMode.subtitle}</p>
+                {mode.subtitle && (
+                  <p
+                    className={clsx(
+                      "text-xs mt-1",
+                      isActive ? "text-white/80" : "text-gray-500"
+                    )}
+                  >
+                    {mode.subtitle}
+                  </p>
+                )}
               </li>
             );
           })}
@@ -89,6 +110,7 @@ export default function Sidebar({
 
       <hr />
 
+      {/* ─── Recent Chats ───────────────────────── */}
       <section className="flex-1 mt-4 space-y-2">
         <h3 className="font-(family-name:--font-robot-text)">Recent Chats</h3>
 

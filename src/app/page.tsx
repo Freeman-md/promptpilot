@@ -7,14 +7,18 @@ import { useState } from "react";
 
 export default function Home() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage } = useChatStore();
+  const { messages, sendMessage, isAwaitingAIResponse } = useChatStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
 
-    await sendMessage(input.trim());
+    const text = input.trim();
+
+    if (!text || text.length <= 3 || isAwaitingAIResponse) return;
+
     setInput("");
+
+    await sendMessage(text);
   };
 
   return (
@@ -61,7 +65,8 @@ export default function Home() {
           />
           <button
             type="submit"
-            className="p-2 rounded-lg bg-primary ring-primary text-white hover:opacity-90 transition"
+            className="p-2 rounded-lg bg-primary ring-primary text-white hover:opacity-90 transition disabled:opacity-10"
+            disabled={isAwaitingAIResponse}
           >
             <IconSend size={18} />
           </button>

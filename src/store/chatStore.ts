@@ -2,124 +2,157 @@ import { AIMode, Message } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 
+/** Define available modes outside the store so they’re not recreated on every hook call */
+const DEFAULT_AI_MODES: AIMode[] = [
+  { title: "Friendly", subtitle: "Warm and conversational" },
+  { title: "Technical", subtitle: "Precise and detailed" },
+  { title: "Creative", subtitle: "Imaginative and inspiring" },
+];
+
+const DEFAULT_MODE = DEFAULT_AI_MODES[0];
+
 type ChatState = {
   messages: Message[];
-  currentChatId: string | null;
-  mode: AIMode;
-  isStreaming: boolean;
+  currentChatId: string;
+  aiModes: AIMode[];
+  activeAIMode: AIMode;
+  isAwaitingAIResponse: boolean;
 
-  startChat: () => void;
-  addUserMessage: (text: string) => void;
-  startStreaming: () => void;
-  updateStreamMessage: (contentChunk: string) => void;
-  endStreaming: () => void;
+  /** Mode control */
+  setActiveAIMode: (modeTitle: string) => void;
+  resetActiveAIMode: () => void;
 
+  /** Chat control */
+  resetChatSession: () => void;
+  addUserMessage: (text: string) => Message;
+
+  /** AI response streaming */
+  beginAIResponseStream: () => void;
+  appendAIResponseChunk: (chunk: string) => void;
+  finalizeAIResponseStream: () => void;
+
+  /** API communication */
   sendMessage: (text: string) => void;
 };
 
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   currentChatId: uuidv4(),
-  mode: {
-    title: "Friendly",
-    subtitle: "Warm and conversational",
-  },
-  isStreaming: false,
+  aiModes: DEFAULT_AI_MODES,
+  activeAIMode: DEFAULT_MODE,
+  isAwaitingAIResponse: false,
 
-  startChat: () =>
-    set(() => ({
+  /** ─── Mode Management ─────────────────────────────── */
+  setActiveAIMode: (modeTitle) =>
+    set((state) => {
+      const found =
+        state.aiModes.find(
+          (mode) => mode.title.toLowerCase() === modeTitle.toLowerCase()
+        ) ?? DEFAULT_MODE;
+
+      // Only update if different to prevent unnecessary renders
+      if (found.title === state.activeAIMode.title) return state;
+      return { activeAIMode: found };
+    }),
+
+  resetActiveAIMode: () => set({ activeAIMode: DEFAULT_MODE }),
+
+  /** ─── Chat Lifecycle ──────────────────────────────── */
+  resetChatSession: () =>
+    set({
       messages: [],
       currentChatId: uuidv4(),
-      isStreaming: false,
-    })),
+      isAwaitingAIResponse: false,
+    }),
 
   addUserMessage: (text) => {
     const { currentChatId } = get();
-    const message: Message = {
+    const userMessage: Message = {
       id: uuidv4(),
       role: "user",
       content: text,
       createdAt: Date.now(),
       isStreaming: false,
-      chatId: currentChatId!,
+      chatId: currentChatId,
     };
-
-    set((state) => ({
-      messages: [...state.messages, message],
-    }));
+    set((state) => ({ messages: [...state.messages, userMessage] }));
+    return userMessage;
   },
 
-  startStreaming: () =>
-    set({
-      isStreaming: true,
-    }),
+  /** ─── AI Stream Handlers ───────────────────────────── */
+  beginAIResponseStream: () => set({ isAwaitingAIResponse: true }),
 
-  updateStreamMessage: (contentChunk) => {
+  appendAIResponseChunk: (chunk) =>
     set((state) => {
       const messages = [...state.messages];
-      const lastMessage = messages[messages.length - 1];
+      const last = messages[messages.length - 1];
 
-      if (lastMessage && lastMessage.role === "assistant") {
-        lastMessage.content += contentChunk;
+      if (last?.role === "assistant") {
+        last.content += chunk;
       } else {
         messages.push({
           id: uuidv4(),
           role: "assistant",
-          content: contentChunk,
+          content: chunk,
           createdAt: Date.now(),
           isStreaming: true,
-          chatId: state.currentChatId!,
+          chatId: state.currentChatId,
         });
       }
-
       return { messages };
-    });
+    }),
+
+  finalizeAIResponseStream: () =>
+    set((state) => {
+      const messages = [...state.messages];
+      const last = messages[messages.length - 1];
+      if (last?.role === "assistant" && last.isStreaming) {
+        last.isStreaming = false;
+      }
+      return { messages, isAwaitingAIResponse: false };
+    }),
+
+  /** ─── Main Send Logic ─────────────────────────────── */
+  sendMessage: async (text) => {
+    const {
+      addUserMessage,
+      beginAIResponseStream,
+      appendAIResponseChunk,
+      finalizeAIResponseStream,
+      isAwaitingAIResponse,
+      activeAIMode,
+      messages,
+    } = get();
+
+    if (isAwaitingAIResponse) return;
+
+    const userMessage = addUserMessage(text);
+    beginAIResponseStream();
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage,
+          mode: activeAIMode,
+          history: messages,
+        }),
+      });
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error("Stream reader not available.");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        appendAIResponseChunk(decoder.decode(value));
+      }
+    } catch (err) {
+      console.error("Error streaming AI response:", err);
+    } finally {
+      finalizeAIResponseStream();
+    }
   },
-
-  endStreaming: () =>
-    set((state) => ({
-      isStreaming: false,
-      messages: state.messages.map((message) =>
-        message.role === "assistant" ? { ...message, isStreaming: false } : message
-      ),
-    })),
-
-  sendMessage: async (text: string) => {
-    const { addUserMessage, startStreaming, updateStreamMessage, endStreaming, mode, messages, currentChatId } = get();
-
-    addUserMessage(text);
-    startStreaming();
-
-    const message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: text,
-      chatId: currentChatId,
-      createdAt: Date.now(),
-      isStreaming: false,
-    };
-
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, mode, history: messages }),
-    });
-
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder();
-
-    if (!reader) {
-      endStreaming();
-      return;
-    }
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      updateStreamMessage(decoder.decode(value));
-    }
-
-    endStreaming();
-  }
-
 }));
