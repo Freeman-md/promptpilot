@@ -2,6 +2,8 @@ import { AIMode, Message } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 
+const TOKEN_LIMIT = 100;
+
 const DEFAULT_AI_MODES: AIMode[] = [
   { title: "Friendly", subtitle: "Warm and conversational" },
   { title: "Technical", subtitle: "Precise and detailed" },
@@ -141,9 +143,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isAwaitingAIResponse,
       activeAIMode,
       messages,
+      tokensUsed
     } = get();
 
     if (isAwaitingAIResponse) return;
+
+    if (tokensUsed > TOKEN_LIMIT) throw new Error("Token limit reached - demo complete.")
 
     const userMessage = addUserMessage(text);
     beginAIResponseStream();
