@@ -97,6 +97,19 @@ export async function POST(request: Request) {
                         ) {
                             controller.enqueue(encoder.encode(event.delta))
                         } else if (event.type === 'response.completed') {
+                            const usage = event.response.usage
+
+                            console.log(usage)
+
+                            if (usage) {
+                                const summary = JSON.stringify({
+                                    type: "usage",
+                                    usage
+                                })
+
+                                controller.enqueue(encoder.encode(`\n${summary}\n`));
+                            }
+
                             controller.close()
                         }
                     }
@@ -105,6 +118,8 @@ export async function POST(request: Request) {
                 }
             }
         })
+
+        console.log(stream)
 
         return new Response(stream, {
             headers: {

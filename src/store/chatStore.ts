@@ -2,7 +2,6 @@ import { AIMode, Message } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 
-/** Define available modes outside the store so they’re not recreated on every hook call */
 const DEFAULT_AI_MODES: AIMode[] = [
   { title: "Friendly", subtitle: "Warm and conversational" },
   { title: "Technical", subtitle: "Precise and detailed" },
@@ -17,6 +16,10 @@ type ChatState = {
   aiModes: AIMode[];
   activeAIMode: AIMode;
   isAwaitingAIResponse: boolean;
+  tokensUsed: number;
+
+  /** Tokens control */
+  incrementTokenCount: (tokens: number) => void;
 
   /** Mode control */
   setActiveAIMode: (modeTitle: string) => void;
@@ -42,6 +45,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   aiModes: DEFAULT_AI_MODES,
   activeAIMode: DEFAULT_MODE,
   isAwaitingAIResponse: false,
+  tokensUsed: 0,
+
+  /** ─── Tokens Management ─────────────────────────────── */
+  incrementTokenCount: (tokens: number) => {
+    set((state) => ({
+      tokensUsed: state.tokensUsed + tokens
+    }))
+  },
 
   /** ─── Mode Management ─────────────────────────────── */
   setActiveAIMode: (modeTitle) =>
@@ -123,6 +134,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const {
       addUserMessage,
       removeMessage,
+      incrementTokenCount,
       beginAIResponseStream,
       appendAIResponseChunk,
       finalizeAIResponseStream,
@@ -156,7 +168,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        appendAIResponseChunk(decoder.decode(value));
+
+        const chunk = decoder.decode(value);
+
+        if (chunk.includes('"type":"usage"')) {
+          const parsed = JSON.parse(chunk.trim())
+          const tokens = parsed.usage.total_tokens;
+          
+          incrementTokenCount(tokens)
+          continue
+        }
+
+        appendAIResponseChunk(chunk);
       }
 
     } catch (err: unknown) {
