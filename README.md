@@ -4,7 +4,7 @@ PromptPilot is a lightweight AI ideation companion built with Next.js 15 and Ope
 
 ## Live Demo
 
-- Web app: https://live-demo.example.com  
+- Web app: https://promptpilot-freemancodz.vercel.app 
 - Demo video / screenshots: _(add link or media when ready)_
 
 > Tip: Drop a GIF or screenshot into `public/` and reference it here once you have visuals.
