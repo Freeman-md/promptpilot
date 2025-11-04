@@ -37,10 +37,6 @@ export const useChatStore = create<ChatState>((set, get) => {
         return { tokensUsed: next };
       });
     },
-    resetTokenCount: () => {
-      writeTokens(0);
-      set({ tokensUsed: 0 });
-    },
 
     // Modes
     setActiveAIMode: (modeTitle) =>
@@ -157,21 +153,6 @@ export const useChatStore = create<ChatState>((set, get) => {
 
       set({
         messages: [],
-        currentChatId: newId,
-        isAwaitingAIResponse: false,
-        currentAssistantMessageId: null,
-      });
-    },
-
-    resetAllSessionData: () => {
-      localStorage.removeItem(CHAT_STORAGE_KEY);
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-      const newId = uuidv4();
-      writeCurrentChatId(newId);
-
-      set({
-        messages: [],
-        tokensUsed: 0,
         currentChatId: newId,
         isAwaitingAIResponse: false,
         currentAssistantMessageId: null,

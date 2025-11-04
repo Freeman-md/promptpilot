@@ -30,16 +30,6 @@ export default function Header() {
 
       <div className="flex space-x-2 items-center">
         <small className="relative">Tokens Used: {tokensUsed} / {TOKEN_LIMIT}</small>
-
-        <div className="flex space-x-1">
-          <Button className="text-sm" variant="muted" onClick={resetTokenCount}>
-            Reset Tokens
-          </Button>
-
-          <Button className="text-sm" variant="muted" onClick={resetSession}>
-            Reset Session
-          </Button>
-        </div>
       </div>
     </header>
   );

@@ -11,7 +11,6 @@ export type ChatState = {
   currentAssistantMessageId: string | null;
 
   incrementTokenCount: (tokens: number) => void;
-  resetTokenCount: () => void;
 
   setActiveAIMode: (modeTitle: string) => void;
   resetActiveAIMode: () => void;
@@ -23,7 +22,6 @@ export type ChatState = {
   changeChat: (chatId: string) => void;
   getAllChats: () => Chat[];
   resetChatHistory: () => void;
-  resetAllSessionData: () => void;
 
   beginAIResponseStream: () => void;
   appendAIResponseChunk: (chunk: string) => void;
