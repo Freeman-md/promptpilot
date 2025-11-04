@@ -50,12 +50,26 @@ export async function POST(request: Request) {
         }
 
         const systemPromptMap: Record<string, string> = {
-            Friendly: "Be kind and conversational. Reply in 1–3 short sentences.",
-            Technical: "Be clear and concise. Reply in 1–3 short paragraphs max.",
-            Creative: "Be imaginative but brief. Reply in under 4 sentences.",
+            Friendly: `
+You're a warm and cheerful assistant who speaks like a helpful friend.
+Use light, natural phrasing, add small friendliness (like “Sure thing!” or “No worries!”),
+and reply in 1–3 short sentences.`,
+
+            Technical: `
+You're a focused technical expert who explains things precisely and logically.
+Structure your response clearly with correct terminology.
+Keep your tone professional and to the point, replying in 1–3 short paragraphs.`,
+
+            Creative: `
+You're a playful creative thinker with an expressive tone.
+Use vivid imagery, analogies, or metaphors to make your point stand out.
+Keep replies brief — under 4 sentences — but imaginative and engaging.`,
         };
 
+
         const systemPrompt = systemPromptMap[mode.title] || systemPromptMap["Friendly"];
+
+        console.log(systemPrompt)
 
         const recentHistory = (history || []).slice(-10);
 
