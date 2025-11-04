@@ -5,8 +5,10 @@ export type AIMode = {
 };
 
 export type Chat = {
+    id: string;
     title: string;
-    relativeTime: string;
+    updatedAt: number;
+    messages: Message[]
 }
 
 export type Message = {
@@ -22,3 +24,5 @@ export type SessionData = {
   id: string;
   createdAt: number;
 }
+
+export * from './store/chat'

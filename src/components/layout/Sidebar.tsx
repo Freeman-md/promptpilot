@@ -1,4 +1,3 @@
-import { Chat } from "@/types";
 import {
   IconRobotFace,
   IconPlus,
@@ -10,33 +9,36 @@ import clsx from "clsx";
 import Button from "@/components/ui/Button";
 import { useLayoutStore } from "@/store/layoutStore";
 import { useChatStore } from "@/store/chatStore";
+import { useState, useEffect } from "react";
 
 type SidebarProps = {
   width?: string;
   className?: string;
 };
 
-/** Local icon map — decoupled from the store */
 const modeIcons: Record<string, React.ElementType> = {
   Friendly: IconHeartFilled,
   Technical: IconCode,
   Creative: IconPaint,
 };
 
-/** Mock chat list (temporary) */
-const chats: Chat[] = [
-  { title: "How to build a React app?", relativeTime: "2 hours ago" },
-  { title: "Creative writing prompts", relativeTime: "Yesterday" },
-  { title: "API documentation best practices", relativeTime: "3 days ago" },
-  { title: "Marketing strategy ideas", relativeTime: "1 week ago" },
-  { title: "UI design principles", relativeTime: "2 weeks ago" },
-];
-
 export default function Sidebar({ width = "w-64", className }: SidebarProps) {
   const { sidebarOpen: isOpen } = useLayoutStore();
 
-  // Zustand chat store hooks
-  const { aiModes, activeAIMode, setActiveAIMode } = useChatStore();
+  const {
+    aiModes,
+    activeAIMode,
+    setActiveAIMode,
+    getAllChats,
+    createNewChat,
+    currentChatId,
+  } = useChatStore();
+
+  const [chats, setChats] = useState(() => getAllChats());
+
+  useEffect(() => {
+    setChats(getAllChats());
+  }, [currentChatId, getAllChats]);
 
   return (
     <aside
@@ -57,14 +59,24 @@ export default function Sidebar({ width = "w-64", className }: SidebarProps) {
         </h1>
       </div>
 
-      <Button variant="primary">
+      {/* ─── New Chat Button ───────────────────── */}
+      <Button
+        variant="primary"
+        onClick={() => {
+          try {
+            createNewChat();
+            setChats(getAllChats());
+          } catch (err) {
+            if (err instanceof Error) alert(err.message);
+          }
+        }}
+      >
         <IconPlus />
         <span>New Chat</span>
       </Button>
 
       <hr />
 
-      {/* ─── AI Modes ───────────────────────────── */}
       <nav className="space-y-2 mt-4">
         <h3 className="font-(family-name:--font-robot-text)">AI Modes</h3>
 
@@ -110,21 +122,37 @@ export default function Sidebar({ width = "w-64", className }: SidebarProps) {
 
       <hr />
 
-      {/* ─── Recent Chats ───────────────────────── */}
       <section className="flex-1 mt-4 space-y-2">
         <h3 className="font-(family-name:--font-robot-text)">Recent Chats</h3>
 
-        <div className="max-h-60 overflow-y-auto pr-2 space-y-2">
-          {chats.map((chat, index) => (
-            <a
-              key={index}
-              className="flex flex-col space-y-1 p-2 rounded hover:bg-gray-50 cursor-pointer"
-            >
-              <em className="text-sm text-gray-800">{chat.title}</em>
-              <small className="text-gray-500">{chat.relativeTime}</small>
-            </a>
-          ))}
-        </div>
+        {chats.length === 0 ? (
+          <p className="text-sm text-gray-500 mt-2">No chats yet</p>
+        ) : (
+          <div className="max-h-60 overflow-y-auto pr-2 space-y-2">
+            {chats.map((chat) => (
+              <a
+                key={chat.id}
+                onClick={() => {
+                  localStorage.setItem("currentChatId", chat.id);
+                  window.location.reload(); // simple for demo
+                }}
+                className={clsx(
+                  "flex flex-col space-y-1 p-2 rounded cursor-pointer transition",
+                  chat.id === currentChatId
+                    ? "bg-gray-100 border border-gray-200"
+                    : "hover:bg-gray-50"
+                )}
+              >
+                <em className="text-sm text-gray-800 truncate">
+                  {chat.title || "Untitled Chat"}
+                </em>
+                <small className="text-gray-500">
+                  {new Date(chat.updatedAt).toLocaleDateString()}
+                </small>
+              </a>
+            ))}
+          </div>
+        )}
       </section>
     </aside>
   );
