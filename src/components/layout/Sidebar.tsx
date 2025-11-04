@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 import { useLayoutStore } from "@/store/layoutStore";
 import { useChatStore } from "@/store/chatStore";
 import { useState, useEffect } from "react";
+import { diffForHumans } from "@/utils/date";
 
 type SidebarProps = {
   width?: string;
@@ -32,6 +33,7 @@ export default function Sidebar({ width = "w-64", className }: SidebarProps) {
     getAllChats,
     createNewChat,
     currentChatId,
+    changeChat
   } = useChatStore();
 
   const [chats, setChats] = useState(() => getAllChats());
@@ -130,14 +132,11 @@ export default function Sidebar({ width = "w-64", className }: SidebarProps) {
         ) : (
           <div className="max-h-60 overflow-y-auto pr-2 space-y-2">
             {chats.map((chat) => (
-              <a
+              <button
                 key={chat.id}
-                onClick={() => {
-                  localStorage.setItem("currentChatId", chat.id);
-                  window.location.reload(); // simple for demo
-                }}
+                onClick={() => changeChat(chat.id)}
                 className={clsx(
-                  "flex flex-col space-y-1 p-2 rounded cursor-pointer transition",
+                  "flex flex-col space-y-1 p-2 rounded cursor-pointer transition w-full text-left",
                   chat.id === currentChatId
                     ? "bg-gray-100 border border-gray-200"
                     : "hover:bg-gray-50"
@@ -147,9 +146,9 @@ export default function Sidebar({ width = "w-64", className }: SidebarProps) {
                   {chat.title || "Untitled Chat"}
                 </em>
                 <small className="text-gray-500">
-                  {new Date(chat.updatedAt).toLocaleDateString()}
+                  {diffForHumans(chat.updatedAt)}
                 </small>
-              </a>
+              </button>
             ))}
           </div>
         )}

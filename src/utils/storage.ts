@@ -33,3 +33,8 @@ export const writeCurrentChatId = (id: string) => {
   if (typeof window === "undefined") return;
   localStorage.setItem("currentChatId", id);
 };
+
+export const findChatById = (id: string) => {
+  const chats = readChats()
+  return chats.find(chat => chat.id === id)
+}

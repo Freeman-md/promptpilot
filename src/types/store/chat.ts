@@ -19,6 +19,7 @@ export type ChatState = {
   removeMessage: (id: string) => void;
   saveChat: (messages: Message[]) => void;
   createNewChat: () => void;
+  changeChat: (chatId: string) => void;
   getAllChats: () => Chat[];
   resetChatHistory: () => void;
   resetAllSessionData: () => void;

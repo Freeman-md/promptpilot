@@ -8,7 +8,8 @@ import {
   readTokens,
   writeTokens,
   readCurrentChatId,
-  writeCurrentChatId
+  writeCurrentChatId,
+  findChatById
 } from '@/utils/storage'
 
 export const useChatStore = create<ChatState>((set, get) => {
@@ -122,6 +123,17 @@ export const useChatStore = create<ChatState>((set, get) => {
     getAllChats: () => {
       const chats = readChats();
       return chats.sort((a, b) => b.updatedAt - a.updatedAt);
+    },
+
+    changeChat: (chatId: string) => {
+      const chat = findChatById(chatId)
+
+      if (!chat) return;
+
+      set({
+        messages: chat.messages,
+        currentChatId: chatId
+      })
     },
 
     resetChatHistory: () => {
