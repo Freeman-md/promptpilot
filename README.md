@@ -133,6 +133,10 @@ npm run lint
 - Support rich messages (markdown, code blocks) and message editing.
 - Internationalize UI copy and date formatting helpers.
 
+## Known Limitations
+
+- `localStorage` hydration: client-only persistence means the first server render can differ from the hydrated UI, producing warnings. Future refactors could wrap stateful sections in a shared “hydrated” hook or move to Suspense-based loading states.
+
 ## Contributing
 
 1. Fork the repository.
