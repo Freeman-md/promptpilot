@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import MessageBubble from "@/components/chat/MessageBubble";
 import MessageForm from "@/components/chat/MessageForm";
@@ -9,6 +10,23 @@ import { IconRobotFace } from "@tabler/icons-react";
 export default function Home() {
   const { messages } = useChatStore();
   const hasMessages = Array.isArray(messages) && messages.length > 0;
+  const listRef = useRef<HTMLDivElement>(null);
+  const previousCountRef = useRef(0);
+  const messageCount = messages.length;
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+
+    const previousCount = previousCountRef.current;
+    const shouldScroll = messageCount > previousCount;
+    previousCountRef.current = messageCount;
+
+    if (!shouldScroll || messageCount === 0) return;
+
+    const behavior = previousCount === 0 ? "auto" : "smooth";
+    el.scrollTo({ top: el.scrollHeight, behavior });
+  }, [messageCount]);
 
   return (
     <div className="relative flex h-full w-full flex-col bg-white">
@@ -31,7 +49,10 @@ export default function Home() {
           </div>
         )}
 
-        <div className="absolute inset-0 flex flex-col overflow-y-auto px-6 pb-24 pt-10">
+        <div
+          ref={listRef}
+          className="absolute inset-0 flex flex-col overflow-y-auto px-6 pb-24 pt-10"
+        >
           <AnimatePresence initial={false}>
             {messages.map((message) => (
               <motion.div
