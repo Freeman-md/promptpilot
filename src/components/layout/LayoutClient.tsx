@@ -4,6 +4,8 @@ import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useLayoutStore } from "@/store/layoutStore";
+import { useEffect } from "react";
+import { getOrCreateSession } from "@/utils/session";
 
 export default function LayoutClient({
   children,
@@ -11,6 +13,11 @@ export default function LayoutClient({
   children: React.ReactNode;
 }) {
   const { sidebarOpen, closeSidebar } = useLayoutStore();
+
+  useEffect(() => {
+    const session = getOrCreateSession();
+    console.log("Active session:", session.id);
+  }, []);
 
   return (
     <>
@@ -27,7 +34,7 @@ export default function LayoutClient({
       )}
 
       <div className="flex-1 min-h-screen flex flex-col bg-white">
-        <Header mode="Friendly Mode" />
+        <Header />
         <main className="relative flex-1 min-h-0">{children}</main>
         <Footer />
       </div>

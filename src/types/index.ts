@@ -17,3 +17,8 @@ export type Message = {
   isStreaming: boolean;
   chatId: string;
 }
+
+export type SessionData = {
+  id: string;
+  createdAt: number;
+}

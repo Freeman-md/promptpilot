@@ -2,10 +2,13 @@ import { useChatStore } from "@/store/chatStore";
 import { useLayoutStore } from "@/store/layoutStore";
 import { IconMenu2 } from "@tabler/icons-react";
 import Button from "../ui/Button";
+import { getSession, resetSession } from "@/utils/session";
+import { TOKEN_LIMIT } from "@/constants";
 
 export default function Header() {
+  const session = getSession();
   const { toggleSidebar } = useLayoutStore();
-  const { activeAIMode, tokensUsed } = useChatStore();
+  const { activeAIMode, tokensUsed, resetTokenCount } = useChatStore();
 
   return (
     <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3 bg-white sticky top-0 z-20">
@@ -27,17 +30,17 @@ export default function Header() {
       </div>
 
       <div className="flex space-x-2 items-center">
-        <div className="relative">Tokens Used: {tokensUsed}</div>
+        <small className="relative">Tokens Used: {tokensUsed} / {TOKEN_LIMIT}</small>
 
-        <Button
-          variant="muted"
-          onClick={() => {
-            useChatStore.getState().resetTokenCount();
-            localStorage.removeItem("tokensUsed");
-          }}
-        >
-          Reset Tokens
-        </Button>
+        <div className="flex space-x-1">
+          <Button className="text-sm" variant="muted" onClick={resetTokenCount}>
+            Reset Tokens
+          </Button>
+
+          <Button className="text-sm" variant="muted" onClick={resetSession}>
+            Reset Session
+          </Button>
+        </div>
       </div>
     </header>
   );

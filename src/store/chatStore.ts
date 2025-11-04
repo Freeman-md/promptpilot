@@ -1,16 +1,7 @@
+import { DEFAULT_AI_MODES, DEFAULT_MODE, TOKEN_LIMIT } from "@/constants";
 import { AIMode, Message } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
-
-const TOKEN_LIMIT = 100;
-
-const DEFAULT_AI_MODES: AIMode[] = [
-  { title: "Friendly", subtitle: "Warm and conversational" },
-  { title: "Technical", subtitle: "Precise and detailed" },
-  { title: "Creative", subtitle: "Imaginative and inspiring" },
-];
-
-const DEFAULT_MODE = DEFAULT_AI_MODES[0];
 
 type ChatState = {
   messages: Message[];
