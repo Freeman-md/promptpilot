@@ -2,11 +2,10 @@ import { useChatStore } from "@/store/chatStore";
 import { useLayoutStore } from "@/store/layoutStore";
 import { IconMenu2 } from "@tabler/icons-react";
 import Button from "../ui/Button";
-import { getSession, resetSession } from "@/utils/session";
+import { resetSession } from "@/utils/session";
 import { TOKEN_LIMIT } from "@/constants";
 
 export default function Header() {
-  const session = getSession();
   const { toggleSidebar } = useLayoutStore();
   const { activeAIMode, tokensUsed, resetTokenCount } = useChatStore();
 

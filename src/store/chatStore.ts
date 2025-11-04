@@ -1,4 +1,4 @@
-import { DEFAULT_AI_MODES, DEFAULT_MODE, TOKEN_LIMIT } from "@/constants";
+import { CHAT_STORAGE_KEY, DEFAULT_AI_MODES, DEFAULT_MODE, TOKEN_LIMIT, TOKEN_STORAGE_KEY } from "@/constants";
 import { AIMode, Message } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
@@ -20,9 +20,11 @@ type ChatState = {
   resetActiveAIMode: () => void;
 
   /** Chat control */
-  resetChatSession: () => void;
   addUserMessage: (text: string) => Message;
   removeMessage: (id: string) => void;
+  saveChats: (messages: Message[]) => void;
+  resetChatHistory: () => void;
+  resetAllSessionData: () => void;
 
   /** AI response streaming */
   beginAIResponseStream: () => void;
@@ -34,13 +36,15 @@ type ChatState = {
 };
 
 export const useChatStore = create<ChatState>((set, get) => ({
-  messages: [],
   currentChatId: uuidv4(),
   aiModes: DEFAULT_AI_MODES,
   activeAIMode: DEFAULT_MODE,
   isAwaitingAIResponse: false,
+  messages: typeof window !== "undefined"
+    ? JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || "[]")
+    : [],
   tokensUsed: typeof window !== "undefined"
-    ? Number(localStorage.getItem("tokensUsed")) || 0
+    ? Number(localStorage.getItem(TOKEN_STORAGE_KEY)) || 0
     : 0,
 
 
@@ -48,7 +52,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   incrementTokenCount: (tokens: number) => {
     set((state) => {
       const updated = state.tokensUsed + tokens;
-      localStorage.setItem("tokensUsed", String(updated));
+      localStorage.setItem(TOKEN_STORAGE_KEY, String(updated));
 
       return { tokensUsed: updated };
     });
@@ -96,12 +100,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       messages: state.messages.filter((message) => message.id !== id),
     })),
+  saveChats: (messages: Message[]) => {
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+  },
+  resetChatHistory: () => {
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    set({
+      messages: [],
+      currentChatId: uuidv4(),
+      isAwaitingAIResponse: false,
+    });
+  },
+  resetAllSessionData: () => {
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    set({
+      messages: [],
+      tokensUsed: 0,
+      currentChatId: uuidv4(),
+      isAwaitingAIResponse: false,
+    });
+  },
+
 
   /** ─── AI Stream Handlers ───────────────────────────── */
   beginAIResponseStream: () => set({ isAwaitingAIResponse: true }),
 
   appendAIResponseChunk: (chunk) =>
     set((state) => {
+      const { saveChats } = get()
       const messages = [...state.messages];
       const last = messages[messages.length - 1];
 
@@ -117,6 +144,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
           chatId: state.currentChatId,
         });
       }
+
+      saveChats(messages)
+
       return { messages };
     }),
 
