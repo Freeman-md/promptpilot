@@ -1,4 +1,4 @@
-import { CHAT_STORAGE_KEY, DEFAULT_AI_MODES, DEFAULT_MODE, TOKEN_LIMIT, TOKEN_STORAGE_KEY } from "@/constants";
+import { CHAT_STORAGE_KEY, DEFAULT_AI_MODES, DEFAULT_MODE, TOKEN_LIMIT } from "@/constants";
 import { Chat, ChatState, Message } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
