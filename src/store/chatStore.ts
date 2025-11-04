@@ -22,6 +22,7 @@ type ChatState = {
 
   /** Tokens control */
   incrementTokenCount: (tokens: number) => void;
+  resetTokenCount: () => void;
 
   /** Mode control */
   setActiveAIMode: (modeTitle: string) => void;
@@ -47,14 +48,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
   aiModes: DEFAULT_AI_MODES,
   activeAIMode: DEFAULT_MODE,
   isAwaitingAIResponse: false,
-  tokensUsed: 0,
+  tokensUsed: typeof window !== "undefined"
+    ? Number(localStorage.getItem("tokensUsed")) || 0
+    : 0,
+
 
   /** ─── Tokens Management ─────────────────────────────── */
   incrementTokenCount: (tokens: number) => {
-    set((state) => ({
-      tokensUsed: state.tokensUsed + tokens
-    }))
+    set((state) => {
+      const updated = state.tokensUsed + tokens;
+      localStorage.setItem("tokensUsed", String(updated));
+
+      return { tokensUsed: updated };
+    });
   },
+  resetTokenCount: () => set({ tokensUsed: 0 }),
 
   /** ─── Mode Management ─────────────────────────────── */
   setActiveAIMode: (modeTitle) =>
@@ -174,12 +182,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const { done, value } = await reader.read();
         if (done) break;
 
+        if (tokensUsed > TOKEN_LIMIT) throw new Error("Token limit reached mid-stream - demo complete.")
+
         const chunk = decoder.decode(value);
 
         if (chunk.includes('"type":"usage"')) {
           const parsed = JSON.parse(chunk.trim())
           const tokens = parsed.usage.total_tokens;
-          
+
           incrementTokenCount(tokens)
           continue
         }
