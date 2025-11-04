@@ -8,6 +8,7 @@ export type ChatState = {
   activeAIMode: AIMode;
   isAwaitingAIResponse: boolean;
   tokensUsed: number;
+  currentAssistantMessageId: string | null;
 
   incrementTokenCount: (tokens: number) => void;
   resetTokenCount: () => void;

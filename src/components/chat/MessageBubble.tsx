@@ -8,6 +8,7 @@ type MessageBubbleProps = {
 
 export default function MessageBubble({ sender, text, isStreaming }: MessageBubbleProps) {
   const isUser = sender === "user";
+  const showTypingIndicator = !isUser && isStreaming && text.length === 0;
 
   return (
     <div
@@ -32,9 +33,23 @@ export default function MessageBubble({ sender, text, isStreaming }: MessageBubb
             : "bg-white border-gray-200 text-gray-800"
         }`}
       >
-        {text}
-        {isStreaming && !isUser && (
-          <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-pulse ml-1" />
+        {showTypingIndicator ? (
+          <div className="flex items-center gap-1">
+            {[0, 1, 2].map((index) => (
+              <span
+                key={index}
+                className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                style={{ animationDelay: `${index * 120}ms` }}
+              />
+            ))}
+          </div>
+        ) : (
+          <>
+            {text}
+            {isStreaming && !isUser && text.length > 0 && (
+              <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-pulse ml-1" />
+            )}
+          </>
         )}
       </div>
     </div>

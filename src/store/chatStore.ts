@@ -25,6 +25,7 @@ export const useChatStore = create<ChatState>((set, get) => {
     aiModes: DEFAULT_AI_MODES,
     activeAIMode: DEFAULT_MODE,
     isAwaitingAIResponse: false,
+    currentAssistantMessageId: null,
     messages: initialMessages,
     tokensUsed: readTokens(),
 
@@ -74,8 +75,17 @@ export const useChatStore = create<ChatState>((set, get) => {
     removeMessage: (id) =>
       set((state) => {
         const nextMessages = state.messages.filter((m) => m.id !== id);
+        if (nextMessages.length === state.messages.length) return {};
+
         get().saveChat(nextMessages);
-        return { messages: nextMessages };
+
+        const updates: Partial<ChatState> = { messages: nextMessages };
+        if (state.currentAssistantMessageId === id) {
+          updates.currentAssistantMessageId = null;
+          updates.isAwaitingAIResponse = false;
+        }
+
+        return updates;
       }),
 
     saveChat: (messages) => {
@@ -115,6 +125,7 @@ export const useChatStore = create<ChatState>((set, get) => {
         currentChatId: newChatId,
         messages: [],
         isAwaitingAIResponse: false,
+        currentAssistantMessageId: null,
       });
 
       get().saveChat([]);
@@ -132,7 +143,9 @@ export const useChatStore = create<ChatState>((set, get) => {
 
       set({
         messages: chat.messages,
-        currentChatId: chatId
+        currentChatId: chatId,
+        currentAssistantMessageId: null,
+        isAwaitingAIResponse: false,
       })
     },
 
@@ -146,6 +159,7 @@ export const useChatStore = create<ChatState>((set, get) => {
         messages: [],
         currentChatId: newId,
         isAwaitingAIResponse: false,
+        currentAssistantMessageId: null,
       });
     },
 
@@ -160,29 +174,50 @@ export const useChatStore = create<ChatState>((set, get) => {
         tokensUsed: 0,
         currentChatId: newId,
         isAwaitingAIResponse: false,
+        currentAssistantMessageId: null,
       });
     },
 
     // Streaming
-    beginAIResponseStream: () => set({ isAwaitingAIResponse: true }),
+    beginAIResponseStream: () => {
+      const { currentChatId, saveChat } = get();
+      const placeholder: Message = {
+        id: uuidv4(),
+        role: "assistant",
+        content: "",
+        createdAt: Date.now(),
+        isStreaming: true,
+        chatId: currentChatId,
+      };
+
+      set((state) => {
+        const messages = [...state.messages, placeholder];
+        saveChat(messages);
+        return {
+          messages,
+          isAwaitingAIResponse: true,
+          currentAssistantMessageId: placeholder.id,
+        };
+      });
+    },
 
     appendAIResponseChunk: (chunk) =>
       set((state) => {
-        const messages = [...state.messages];
-        const last = messages[messages.length - 1];
+        const targetId = state.currentAssistantMessageId;
+        if (!targetId) return {};
 
-        if (last?.role === "assistant") {
-          last.content += chunk;
-        } else {
-          messages.push({
-            id: uuidv4(),
-            role: "assistant",
-            content: chunk,
-            createdAt: Date.now(),
-            isStreaming: true,
-            chatId: state.currentChatId,
-          });
-        }
+        let updated = false;
+        const messages = state.messages.map((message) => {
+          if (message.id !== targetId) return message;
+
+          updated = true;
+          return {
+            ...message,
+            content: message.content + chunk,
+          };
+        });
+
+        if (!updated) return {};
 
         get().saveChat(messages);
         return { messages };
@@ -190,13 +225,38 @@ export const useChatStore = create<ChatState>((set, get) => {
 
     finalizeAIResponseStream: () =>
       set((state) => {
-        const messages = [...state.messages];
-        const last = messages[messages.length - 1];
-        if (last?.role === "assistant" && last.isStreaming) {
-          last.isStreaming = false;
+        const targetId = state.currentAssistantMessageId;
+        let updated = false;
+
+        const messages = state.messages.map((message) => {
+          if (targetId) {
+            if (message.id !== targetId || !message.isStreaming) return message;
+            updated = true;
+            return { ...message, isStreaming: false };
+          }
+
+          if (
+            message.role === "assistant" &&
+            message.isStreaming &&
+            message.chatId === state.currentChatId
+          ) {
+            updated = true;
+            return { ...message, isStreaming: false };
+          }
+
+          return message;
+        });
+
+        if (updated) {
+          get().saveChat(messages);
+          return {
+            messages,
+            isAwaitingAIResponse: false,
+            currentAssistantMessageId: null,
+          };
         }
-        get().saveChat(messages);
-        return { messages, isAwaitingAIResponse: false };
+
+        return { isAwaitingAIResponse: false, currentAssistantMessageId: null };
       }),
 
     // Send
@@ -260,6 +320,8 @@ export const useChatStore = create<ChatState>((set, get) => {
         }
       } catch (err) {
         removeMessage(userMessage.id);
+        const streamingId = get().currentAssistantMessageId;
+        if (streamingId) removeMessage(streamingId);
         if (err instanceof Error) throw new Error(err.message || "Failed to send message.");
         throw err;
       } finally {
