@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import MessageBubble from "@/components/chat/MessageBubble";
 import MessageForm from "@/components/chat/MessageForm";
 import { useChatStore } from "@/store/chatStore";
@@ -7,13 +8,14 @@ import { IconRobotFace } from "@tabler/icons-react";
 
 export default function Home() {
   const { messages } = useChatStore();
+  const hasMessages = Array.isArray(messages) && messages.length > 0;
 
   return (
-    <div className="relative h-full w-full flex flex-col bg-white">
-      <div className="flex-1 relative overflow-y-auto">
-        {(!messages || (Array.isArray(messages) && messages.length === 0)) && (
+    <div className="relative flex h-full w-full flex-col bg-white">
+      <div className="relative flex-1 overflow-hidden">
+        {!hasMessages && (
           <div className="absolute inset-0 grid place-items-center px-6">
-            <div className="text-center max-w-xl">
+            <div className="max-w-xl text-center">
               <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-primary text-white">
                 <IconRobotFace size={28} />
               </div>
@@ -29,15 +31,25 @@ export default function Home() {
           </div>
         )}
 
-        <div className="absolute bottom-2 left-6 right-6 flex flex-col gap-4 overflow-y-scroll h-full pt-10">
-          {messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              sender={message.role === "user" ? "user" : "ai"}
-              text={message.content}
-              isStreaming={message.isStreaming}
-            />
-          ))}
+        <div className="absolute inset-0 flex flex-col overflow-y-auto px-6 pb-24 pt-10">
+          <AnimatePresence initial={false}>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="mb-4 last:mb-0"
+              >
+                <MessageBubble
+                  sender={message.role === "user" ? "user" : "ai"}
+                  text={message.content}
+                  isStreaming={message.isStreaming}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 
