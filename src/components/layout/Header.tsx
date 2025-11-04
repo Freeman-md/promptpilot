@@ -1,13 +1,11 @@
 import { useChatStore } from "@/store/chatStore";
 import { useLayoutStore } from "@/store/layoutStore";
 import { IconMenu2 } from "@tabler/icons-react";
-import Button from "../ui/Button";
-import { resetSession } from "@/utils/session";
 import { TOKEN_LIMIT } from "@/constants";
 
 export default function Header() {
   const { toggleSidebar } = useLayoutStore();
-  const { activeAIMode, tokensUsed, resetTokenCount } = useChatStore();
+  const { activeAIMode, tokensUsed } = useChatStore();
 
   return (
     <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3 bg-white sticky top-0 z-20">
