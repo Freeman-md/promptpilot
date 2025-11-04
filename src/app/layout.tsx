@@ -3,6 +3,7 @@ import { Geist, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import LayoutClient from "@/components/layout/LayoutClient";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const spaceGrotesk = Space_Grotesk({
@@ -27,6 +28,7 @@ export default function RootLayout({
       >
         <LayoutClient>{children}</LayoutClient>
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
